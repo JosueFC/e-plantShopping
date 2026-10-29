@@ -2,7 +2,7 @@ import React from 'react';
 
 function AboutUs() {
   return (
-    <div className="about-us">
+    <div className="about-us-container about-us">
       <p>
         Welcome to Paradise Nursery, your premier destination for vibrant, healthy houseplants.
         We believe that bringing nature indoors shouldn&apos;t be complicated. Our curated

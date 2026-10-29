@@ -1,28 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { addItem } from './CartSlice.jsx';
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-// Generates a simple leaf-on-green thumbnail. Used when a plant has no photo URL
-// or when a photo fails to load, so a thumbnail is always visible.
-export const makePlaceholder = (name = 'Plant', color = '#2f7a4f') => {
-  const svg =
-    `<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'>` +
-    `<rect width='100%' height='100%' fill='${color}'/>` +
-    `<text x='50%' y='48%' font-size='110' text-anchor='middle'>🌿</text>` +
-    `<text x='50%' y='72%' font-size='30' fill='white' text-anchor='middle' font-family='sans-serif'>${name}</text>` +
-    `</svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
-};
-
-// Swap a broken image for the placeholder (guarded so it can't loop).
-export const handleImageError = (e, name) => {
-  e.currentTarget.onerror = null;
-  e.currentTarget.src = makePlaceholder(name);
-};
+import CartItem from './CartItem.jsx';
+import { makePlaceholder, handleImageError } from './plantImages.js';
 
 const unsplash = (photoId) =>
   `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=400&q=80`;
@@ -32,47 +12,47 @@ const unsplash = (photoId) =>
 // To use your own photos, replace any `image` value with a URL or a path such as
 // '/images/aloe-vera.jpg' (files placed in /public/images).
 // ---------------------------------------------------------------------------
-export const plantsArray = [
+const plantsArray = [
   {
     category: 'Succulents',
     color: '#4f8f5b',
     plants: [
-      { id: 1, name: 'Aloe Vera', price: 15, description: 'Healing and low maintenance.', image: unsplash('photo-1596547609652-9fc5d8d428ae') },
-      { id: 2, name: 'Snake Plant', price: 20, description: 'Perfect for purifying indoor air.', image: unsplash('photo-1593482892290-f54927ae1ebb') },
-      { id: 7, name: 'Jade Plant', price: 18, description: 'A symbol of good luck with thick, glossy leaves.' },
-      { id: 8, name: 'Echeveria', price: 12, description: 'Rosette-shaped beauty in soft blue-green tones.' },
-      { id: 9, name: 'Haworthia', price: 14, description: 'Compact, striped, and happy on a desk.' },
-      { id: 10, name: "Burro's Tail", price: 19, description: 'Trailing stems that look great in hanging pots.' },
+      { name: 'Aloe Vera', cost: 15, description: 'Healing and low maintenance.', image: unsplash('photo-1596547609652-9fc5d8d428ae') },
+      { name: 'Snake Plant', cost: 20, description: 'Perfect for purifying indoor air.', image: unsplash('photo-1593482892290-f54927ae1ebb') },
+      { name: 'Jade Plant', cost: 18, description: 'A symbol of good luck with thick, glossy leaves.' },
+      { name: 'Echeveria', cost: 12, description: 'Rosette-shaped beauty in soft blue-green tones.' },
+      { name: 'Haworthia', cost: 14, description: 'Compact, striped, and happy on a desk.' },
+      { name: "Burro's Tail", cost: 19, description: 'Trailing stems that look great in hanging pots.' },
     ],
   },
   {
     category: 'Ferns',
     color: '#3f7f6b',
     plants: [
-      { id: 3, name: 'Boston Fern', price: 18, description: 'Lush, feathery fronds for high humidity.', image: unsplash('photo-1614594975525-e45190c55d0b') },
-      { id: 4, name: 'Maidenhair Fern', price: 22, description: 'Delicate foliage for bright, indirect light.', image: unsplash('photo-1632207691143-643e2a9a9361') },
-      { id: 11, name: "Bird's Nest Fern", price: 24, description: 'Wavy, apple-green fronds that grow in a tidy rosette.' },
-      { id: 12, name: 'Staghorn Fern', price: 32, description: 'A sculptural fern that can be mounted on a board.' },
-      { id: 13, name: 'Button Fern', price: 16, description: 'Tough, compact fern with round, button-like leaflets.' },
-      { id: 14, name: "Rabbit's Foot Fern", price: 26, description: 'Fuzzy rhizomes creep over the pot edge.' },
+      { name: 'Boston Fern', cost: 18, description: 'Lush, feathery fronds for high humidity.', image: unsplash('photo-1614594975525-e45190c55d0b') },
+      { name: 'Maidenhair Fern', cost: 22, description: 'Delicate foliage for bright, indirect light.', image: unsplash('photo-1632207691143-643e2a9a9361') },
+      { name: "Bird's Nest Fern", cost: 24, description: 'Wavy, apple-green fronds that grow in a tidy rosette.' },
+      { name: 'Staghorn Fern', cost: 32, description: 'A sculptural fern that can be mounted on a board.' },
+      { name: 'Button Fern', cost: 16, description: 'Tough, compact fern with round, button-like leaflets.' },
+      { name: "Rabbit's Foot Fern", cost: 26, description: 'Fuzzy rhizomes creep over the pot edge.' },
     ],
   },
   {
     category: 'Ficus',
     color: '#5a8a3c',
     plants: [
-      { id: 5, name: 'Fiddle Leaf Fig', price: 35, description: 'A bold statement plant with large leaves.', image: unsplash('photo-1574911855683-162e24749f7f') },
-      { id: 6, name: 'Rubber Plant', price: 25, description: 'Sturdy, glossy leaves and easy to care for.', image: unsplash('photo-1613739118925-cde1e8f5d65b') },
-      { id: 15, name: 'Weeping Fig', price: 30, description: 'Graceful, arching branches with small shiny leaves.' },
-      { id: 16, name: 'Ficus Audrey', price: 34, description: 'Velvety, broad leaves with pale veining.' },
-      { id: 17, name: 'Creeping Fig', price: 13, description: 'A trailing vine that softens shelves and sills.' },
-      { id: 18, name: 'Ficus Ginseng', price: 28, description: 'Bonsai-style trunk with a lush green canopy.' },
+      { name: 'Fiddle Leaf Fig', cost: 35, description: 'A bold statement plant with large leaves.', image: unsplash('photo-1574911855683-162e24749f7f') },
+      { name: 'Rubber Plant', cost: 25, description: 'Sturdy, glossy leaves and easy to care for.', image: unsplash('photo-1613739118925-cde1e8f5d65b') },
+      { name: 'Weeping Fig', cost: 30, description: 'Graceful, arching branches with small shiny leaves.' },
+      { name: 'Ficus Audrey', cost: 34, description: 'Velvety, broad leaves with pale veining.' },
+      { name: 'Creeping Fig', cost: 13, description: 'A trailing vine that softens shelves and sills.' },
+      { name: 'Ficus Ginseng', cost: 28, description: 'Bonsai-style trunk with a lush green canopy.' },
     ],
   },
 ];
 
 // ---------------------------------------------------------------------------
-// Navbar (shown on the Plants page and the Cart page)
+// Icons
 // ---------------------------------------------------------------------------
 const LeafIcon = () => (
   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -96,104 +76,130 @@ const CartIcon = () => (
   </svg>
 );
 
-export function Navbar({ navigate }) {
-  // Total number of items in the cart (sum of all quantities)
-  const cartCount = useSelector((state) =>
-    state.cart.items.reduce((total, item) => total + item.quantity, 0)
-  );
-
-  return (
-    <nav className="navbar">
-      <button className="nav-brand" onClick={() => navigate('landing')}>
-        <LeafIcon />
-        <span>Paradise Nursery</span>
-      </button>
-      <div className="nav-links">
-        <button className="nav-link" onClick={() => navigate('landing')}>
-          <HomeIcon />
-          <span className="nav-label">Home</span>
-        </button>
-        <button className="nav-link" onClick={() => navigate('products')}>
-          <LeafIcon />
-          <span className="nav-label">Plants</span>
-        </button>
-        <button
-          className="nav-link cart-link"
-          onClick={() => navigate('cart')}
-          aria-label={`Cart, ${cartCount} items`}
-        >
-          <CartIcon />
-          <span className="nav-label">Cart</span>
-          <span className="cart-badge" data-testid="cart-count">{cartCount}</span>
-        </button>
-      </div>
-    </nav>
-  );
-}
-
 // ---------------------------------------------------------------------------
-// Product listing page
+// Product listing page. The navbar lives here and is shown on both the plant
+// listing and the shopping cart (the cart is rendered inside this component).
 // ---------------------------------------------------------------------------
-function ProductList({ navigate }) {
+function ProductList({ onHomeClick }) {
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.items);
+  const [showCart, setShowCart] = useState(false);
 
-  const isInCart = (id) => cartItems.some((item) => item.id === id);
+  // addedToCart[plant.name] is true when that plant is already in the cart.
+  // Derived from the Redux store so the buttons stay disabled after navigating away and back.
+  const addedToCart = cartItems.reduce((acc, item) => {
+    acc[item.name] = true;
+    return acc;
+  }, {});
+
+  // Total number of items in the cart (sum of all quantities)
+  const calculateTotalQuantity = () =>
+    cartItems.reduce((total, item) => total + item.quantity, 0);
 
   const handleAddToCart = (plant, category, color) => {
     dispatch(
       addItem({
-        id: plant.id,
         name: plant.name,
-        price: plant.price,
+        cost: plant.cost,
         category,
         image: plant.image || makePlaceholder(plant.name, color),
       })
     );
   };
 
+  // Navbar "Home": back to the landing page (handled in App)
+  const handleHomeClick = (e) => {
+    e.preventDefault();
+    onHomeClick();
+  };
+
+  // Navbar "Plants": show the plant listing
+  const handlePlantsClick = (e) => {
+    e.preventDefault();
+    setShowCart(false);
+    window.scrollTo(0, 0);
+  };
+
+  // Navbar cart icon: show the shopping cart
+  const handleCartClick = (e) => {
+    e.preventDefault();
+    setShowCart(true);
+    window.scrollTo(0, 0);
+  };
+
+  // Cart "Continue Shopping": back to the plant listing
+  const handleContinueShopping = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setShowCart(false);
+    window.scrollTo(0, 0);
+  };
+
   return (
     <div className="page">
-      <Navbar navigate={navigate} />
+      <nav className="navbar">
+        <button className="nav-brand" onClick={(e) => handleHomeClick(e)}>
+          <LeafIcon />
+          <span>Paradise Nursery</span>
+        </button>
+        <div className="nav-links">
+          <button className="nav-link" onClick={(e) => handleHomeClick(e)}>
+            <HomeIcon />
+            <span className="nav-label">Home</span>
+          </button>
+          <button className="nav-link" onClick={(e) => handlePlantsClick(e)}>
+            <LeafIcon />
+            <span className="nav-label">Plants</span>
+          </button>
+          <button
+            className="nav-link cart-link"
+            onClick={(e) => handleCartClick(e)}
+            aria-label={`Cart, ${calculateTotalQuantity()} items`}
+          >
+            <CartIcon />
+            <span className="nav-label">Cart</span>
+            <span className="cart-badge cart_quantity_count" data-testid="cart-count">{calculateTotalQuantity()}</span>
+          </button>
+        </div>
+      </nav>
 
-      <main className="product-page">
-        <h2 className="page-title">Our Plant Collection</h2>
+      {!showCart ? (
+        <main className="product-page">
+          <h2 className="page-title">Our Plant Collection</h2>
 
-        {plantsArray.map(({ category, color, plants }) => (
-          <section key={category} className="category-section">
-            <h3 className="category-title">{category}</h3>
-            <div className="product-grid">
-              {plants.map((plant) => {
-                const added = isInCart(plant.id);
-                const src = plant.image || makePlaceholder(plant.name, color);
-                return (
-                  <div key={plant.id} className="product-card">
+          {plantsArray.map(({ category, color, plants }) => (
+            <section key={category} className="category-section">
+              <h3 className="category-title">{category}</h3>
+              <div className="product-list product-grid">
+                {plants.map((plant) => (
+                  <div key={plant.name} className="product-card">
                     <img
                       className="product-image"
-                      src={src}
+                      src={plant.image || makePlaceholder(plant.name, color)}
                       alt={plant.name}
                       loading="lazy"
                       onError={(e) => handleImageError(e, plant.name)}
                     />
                     <div className="product-info">
                       <h4 className="product-name">{plant.name}</h4>
-                      <p className="product-price">${plant.price}</p>
+                      <p className="product-price">${plant.cost}</p>
                       <p className="product-description">{plant.description}</p>
                       <button
                         className="add-btn"
                         onClick={() => handleAddToCart(plant, category, color)}
-                        disabled={added}
+                        disabled={addedToCart[plant.name]}
                       >
-                        {added ? 'Added to Cart' : 'Add to Cart'}
+                        {addedToCart[plant.name] ? 'Added to Cart' : 'Add to Cart'}
                       </button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </section>
-        ))}
-      </main>
+                ))}
+              </div>
+            </section>
+          ))}
+        </main>
+      ) : (
+        <CartItem onContinueShopping={handleContinueShopping} />
+      )}
     </div>
   );
 }

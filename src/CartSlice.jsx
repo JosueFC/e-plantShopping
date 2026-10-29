@@ -1,46 +1,42 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-// Cart item shape: { id, name, price, image, category, quantity }
+// Cart item shape: { name, cost, image, category, quantity }
+// Plants are identified by their unique name.
 const initialState = {
   items: [],
 };
 
-const cartSlice = createSlice({
+const CartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
     // Adds a plant to the cart (quantity 1). Ignored if it is already in the cart.
     addItem: (state, action) => {
-      const { id, name, price, image, category } = action.payload;
-      const existing = state.items.find((item) => item.id === id);
-      if (!existing) {
-        state.items.push({ id, name, price, image, category, quantity: 1 });
+      const { name, cost, image, category } = action.payload;
+      const existingItem = state.items.find((item) => item.name === name);
+      if (!existingItem) {
+        state.items.push({ name, cost, image, category, quantity: 1 });
       }
     },
 
-    // Removes a plant from the cart entirely (delete button).
+    // Removes a plant from the cart entirely.
     removeItem: (state, action) => {
-      state.items = state.items.filter((item) => item.id !== action.payload);
+      state.items = state.items.filter((item) => item.name !== action.payload);
     },
 
-    // "+" button: quantity goes up by one.
-    increaseQuantity: (state, action) => {
-      const item = state.items.find((i) => i.id === action.payload);
-      if (item) item.quantity += 1;
-    },
-
-    // "-" button: quantity goes down by one; at quantity 1 the item is removed.
-    decreaseQuantity: (state, action) => {
-      const item = state.items.find((i) => i.id === action.payload);
-      if (!item) return;
-      if (item.quantity > 1) {
-        item.quantity -= 1;
+    // Sets the quantity of a plant. payload: { name, quantity }
+    updateQuantity: (state, action) => {
+      const { name, quantity } = action.payload;
+      const itemToUpdate = state.items.find((item) => item.name === name);
+      if (!itemToUpdate) return;
+      if (quantity < 1) {
+        state.items = state.items.filter((item) => item.name !== name);
       } else {
-        state.items = state.items.filter((i) => i.id !== action.payload);
+        itemToUpdate.quantity = quantity;
       }
     },
   },
 });
 
-export const { addItem, removeItem, increaseQuantity, decreaseQuantity } = cartSlice.actions;
-export default cartSlice.reducer;
+export const { addItem, removeItem, updateQuantity } = CartSlice.actions;
+export default CartSlice.reducer;

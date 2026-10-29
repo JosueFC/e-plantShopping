@@ -37,19 +37,29 @@ button {
 
 /* Background image for the landing page */
 .landing-page {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
   background-color: var(--green-900);
+}
+
+.background-image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
     url('https://images.unsplash.com/photo-1466692476877-3615115c5310?auto=format&fit=crop&w=1920&q=80');
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
 }
 
 .landing-content {
+  position: relative;
+  z-index: 1;
   max-width: 760px;
   text-align: center;
   color: #fff;
